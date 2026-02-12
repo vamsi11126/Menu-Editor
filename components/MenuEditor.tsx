@@ -4,7 +4,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Save, Trash2, Edit2, Eye, Download, Upload, Minus, Share2, QrCode as QrCodeIcon } from 'lucide-react';
-import { MenuData } from '@/lib/types';
+import { MenuData, MenuItem, Section } from '@/lib/types';
 
 interface MenuEditorProps {
     menuId: string;
@@ -14,16 +14,16 @@ interface MenuEditorProps {
 
 const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) => {
     // Initialize state from initialMenu prop
-    const [menuItems, setMenuItems] = useState(initialMenu.individual_items || []);
+    const [menuItems, setMenuItems] = useState(initialMenu.individualItems || []);
     const [sections, setSections] = useState(initialMenu.sections || []);
     const [lines, setLines] = useState(initialMenu.lines || []);
     const [images, setImages] = useState(initialMenu.images || []);
-    const [itemSpacing, setItemSpacing] = useState(initialMenu.item_spacing || 50);
-    const [canvasSize, setCanvasSize] = useState(initialMenu.canvas_size || { width: 600, height: 800 });
-    const [backgroundUrl, setBackgroundUrl] = useState(initialMenu.background_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800'%3E%3Crect fill='%23f8f9fa' width='600' height='800'/%3E%3Ctext x='300' y='80' font-family='Arial' font-size='32' fill='%23333' text-anchor='middle' font-weight='bold'%3ERestaurant Menu%3C/text%3E%3Crect x='50' y='120' width='500' height='2' fill='%23ddd'/%3E%3C/svg%3E");
-    const [backgroundColor, setBackgroundColor] = useState(initialMenu.background_color || '#f8f9fa');
-    const [uniformSectionSize, setUniformSectionSize] = useState(initialMenu.uniform_section_size || { width: 400, height: 300 });
-    const [priceMemory, setPriceMemory] = useState(initialMenu.price_memory || {});
+    const [itemSpacing, setItemSpacing] = useState(initialMenu.itemSpacing || 50);
+    const [canvasSize, setCanvasSize] = useState(initialMenu.canvasSize || { width: 600, height: 800 });
+    const [backgroundUrl, setBackgroundUrl] = useState(initialMenu.backgroundUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800'%3E%3Crect fill='%23f8f9fa' width='600' height='800'/%3E%3Ctext x='300' y='80' font-family='Arial' font-size='32' fill='%23333' text-anchor='middle' font-weight='bold'%3ERestaurant Menu%3C/text%3E%3Crect x='50' y='120' width='500' height='2' fill='%23ddd'/%3E%3C/svg%3E");
+    const [backgroundColor, setBackgroundColor] = useState(initialMenu.backgroundColor || '#f8f9fa');
+    const [uniformSectionSize, setUniformSectionSize] = useState(initialMenu.uniformSectionSize || { width: 400, height: 300 });
+    const [priceMemory, setPriceMemory] = useState(initialMenu.priceMemory || {});
 
     // Other state variables
     const [mode, setMode] = useState('admin');
@@ -290,7 +290,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
 
     const addNewItem = () => {
         const lastItem = menuItems.filter(item => item.type === 'item').slice(-1)[0];
-        const newItem = {
+        const newItem: MenuItem = {
             id: Date.now(),
             name: 'New Item',
             price: '0',
@@ -309,7 +309,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
 
     const addNewTitle = () => {
         const lastTitle = menuItems.filter(item => item.type === 'title').slice(-1)[0];
-        const newTitle = {
+        const newTitle: MenuItem = {
             id: Date.now(),
             name: 'STARTERS',
             price: '',
@@ -329,7 +329,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
     const addNewSection = () => {
         saveToHistory();
         const lastSection = sections.slice(-1)[0];
-        const newSection = {
+        const newSection: Section = {
             id: Date.now(),
             title: 'NEW SECTION',
             x: 100,
@@ -391,7 +391,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
 
                 if (!price1 || !price2) return null;
 
-                const item = {
+                const item: MenuItem = {
                     id: Date.now() + index,
                     name,
                     price1,
@@ -425,7 +425,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
                     }));
                 }
 
-                const item = {
+                const item: MenuItem = {
                     id: Date.now() + index,
                     name,
                     price,

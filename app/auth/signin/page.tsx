@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 
-export default function SignInPage() {
+function SignInContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const redirect = searchParams.get('redirect') || '/dashboard'
@@ -139,5 +139,13 @@ export default function SignInPage() {
                 </p>
             </div>
         </div>
+    )
+}
+
+export default function SignInPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-2xl text-gray-600">Loading...</div></div>}>
+            <SignInContent />
+        </Suspense>
     )
 }
