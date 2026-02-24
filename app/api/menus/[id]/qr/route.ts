@@ -35,7 +35,8 @@ export async function POST(
         }
 
         // Generate QR code
-        const menuUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/menu/${menu.slug}`
+        const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+        const menuUrl = `${appBaseUrl}/menu/${menu.slug}`
         const qrCodeDataUrl = await QRCode.toDataURL(menuUrl, {
             width: 512,
             margin: 2,

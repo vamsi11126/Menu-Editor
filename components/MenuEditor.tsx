@@ -50,6 +50,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
     const importInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const historyInitializedRef = useRef(false);
 
     const defaultImageAdjustments = {
         brightness: 100,
@@ -86,9 +87,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
         }
     };
 
-    // Save state to history for undo/redo
-    const saveToHistory = () => {
-        const currentState = {
+    const createHistoryState = () => {
+        return {
             menuItems: JSON.parse(JSON.stringify(menuItems)),
             sections: JSON.parse(JSON.stringify(sections)),
             lines: JSON.parse(JSON.stringify(lines)),
@@ -96,7 +96,11 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
             itemSpacing,
             uniformSectionSize: { ...uniformSectionSize }
         };
+    };
 
+    // Save state to history for undo/redo
+    const saveToHistory = () => {
+        const currentState = createHistoryState();
         const newHistory = history.slice(0, historyIndex + 1);
         newHistory.push(currentState);
 
@@ -108,6 +112,15 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
 
         setHistory(newHistory);
     };
+
+    useEffect(() => {
+        if (!historyInitializedRef.current) {
+            const initialState = createHistoryState();
+            setHistory([initialState]);
+            setHistoryIndex(0);
+            historyInitializedRef.current = true;
+        }
+    }, []);
 
     const undo = () => {
         if (historyIndex > 0) {
@@ -177,6 +190,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
 
     const handleMouseDown = (e: React.MouseEvent, item: any) => {
         if (mode !== 'admin' || drawingLine) return;
+        saveToHistory();
         e.stopPropagation();
         const rect = canvasRef.current?.getBoundingClientRect();
         if (!rect) return;
@@ -194,6 +208,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
 
     const handleCanvasMouseDown = (e: React.MouseEvent) => {
         if (mode !== 'admin' || !drawingLine) return;
+        saveToHistory();
         const rect = canvasRef.current?.getBoundingClientRect();
         if (!rect) return;
         const x = e.clientX - rect.left;
@@ -289,6 +304,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
     };
 
     const addNewItem = () => {
+        saveToHistory();
         const lastItem = menuItems.filter(item => item.type === 'item').slice(-1)[0];
         const newItem: MenuItem = {
             id: Date.now(),
@@ -308,6 +324,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
     };
 
     const addNewTitle = () => {
+        saveToHistory();
         const lastTitle = menuItems.filter(item => item.type === 'title').slice(-1)[0];
         const newTitle: MenuItem = {
             id: Date.now(),
@@ -329,11 +346,14 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
     const addNewSection = () => {
         saveToHistory();
         const lastSection = sections.slice(-1)[0];
+        const nextSectionY = sections.length === 0
+            ? 120
+            : Math.max(...sections.map(section => section.y + (section.height || uniformSectionSize.height))) + 30;
         const newSection: Section = {
             id: Date.now(),
             title: 'NEW SECTION',
             x: 100,
-            y: getNextYPosition(),
+            y: nextSectionY,
             fontSize: 18,
             titleFontSize: 24,
             color: lastSection ? lastSection.color : '#000000',
@@ -1171,6 +1191,7 @@ Ready for professional printing!`);
     };
 
     const removeBackground = () => {
+        saveToHistory();
         setBackgroundUrl("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800'%3E%3Crect fill='%23f8f9fa' width='600' height='800'/%3E%3Ctext x='300' y='80' font-family='Arial' font-size='32' fill='%23333' text-anchor='middle' font-weight='bold'%3ERestaurant Menu%3C/text%3E%3Crect x='50' y='120' width='500' height='2' fill='%23ddd'/%3E%3C/svg%3E");
         setCanvasSize({ width: 600, height: 800 });
         if (fileInputRef.current) {
@@ -1184,6 +1205,10 @@ Ready for professional printing!`);
                 method: 'POST',
             });
             const data = await response.json();
+            if (!response.ok) {
+                alert(data?.error || 'Failed to generate QR code');
+                return;
+            }
             if (data.qrCodeUrl) {
                 setQrCodeUrl(data.qrCodeUrl);
                 setShowQRModal(true);
@@ -1391,7 +1416,7 @@ Ready for professional printing!`);
 
                         <label style={{ display: 'block', marginBottom: '12px', fontSize: '12px', fontWeight: 'bold' }}>
                             Background Color:
-                            <input type="color" value={backgroundColor} onChange={(e) => { const newColor = e.target.value; setBackgroundColor(newColor); setSections(sections.map(s => ({ ...s, backgroundColor: newColor }))); }} style={{ width: '100%', padding: '4px', marginTop: '4px', border: '1px solid #ced4da', borderRadius: '4px', height: '40px', cursor: 'pointer' }} />
+                            <input type="color" value={backgroundColor} onChange={(e) => { saveToHistory(); const newColor = e.target.value; setBackgroundColor(newColor); setSections(sections.map(s => ({ ...s, backgroundColor: newColor }))); }} style={{ width: '100%', padding: '4px', marginTop: '4px', border: '1px solid #ced4da', borderRadius: '4px', height: '40px', cursor: 'pointer' }} />
                         </label>
                     </div>
 
@@ -1413,6 +1438,16 @@ Ready for professional printing!`);
                     {selectedImageData && (
                             <div style={{ borderTop: '2px solid #dee2e6', paddingTop: '20px' }}>
                                 <h4 style={{ marginTop: 0, fontSize: '16px' }}>Edit Image</h4>
+
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 'bold' }}>
+                                    X Position: {selectedImageData.x}px
+                                    <input type="range" min="0" max={Math.max(0, canvasSize.width - selectedImageData.width)} value={selectedImageData.x} onChange={(e) => updateImage(selectedImageData.id, 'x', parseInt(e.target.value))} style={{ width: '100%', marginTop: '4px', cursor: 'pointer' }} />
+                                </label>
+
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 'bold' }}>
+                                    Y Position: {selectedImageData.y}px
+                                    <input type="range" min="0" max={Math.max(0, canvasSize.height - selectedImageData.height)} value={selectedImageData.y} onChange={(e) => updateImage(selectedImageData.id, 'y', parseInt(e.target.value))} style={{ width: '100%', marginTop: '4px', cursor: 'pointer' }} />
+                                </label>
 
                                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 'bold' }}>
                                     Width: {selectedImageData.width}px
