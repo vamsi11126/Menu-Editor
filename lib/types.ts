@@ -14,7 +14,7 @@ export interface MenuItem {
     type: 'item' | 'title'
     layout: string
     align: 'left' | 'center' | 'right'
-    priceType?: 'single' | 'double'
+    priceType?: 'single' | 'double' | 'small-large' | 'half-full'
     showUnderline?: boolean
 }
 

@@ -756,8 +756,18 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
         'Bookman', 'Trebuchet MS', 'Playfair Display', 'Merriweather',
         'Lora', 'Crimson Text', 'EB Garamond', 'Libre Baskerville',
         'Cormorant Garamond', 'Cinzel', 'Oswald', 'Bebas Neue',
-        'Alfa Slab One', 'Anton', 'Righteous'
+        'Alfa Slab One', 'Anton', 'Righteous', 'Poppins', 'Montserrat',
+        'Open Sans', 'Nunito', 'Roboto', 'DM Sans', 'Manrope'
     ];
+
+    const isDualPriceType = (priceType?: MenuItem['priceType']) =>
+        priceType === 'double' || priceType === 'small-large' || priceType === 'half-full';
+
+    const getPriceLabels = (priceType?: MenuItem['priceType']) => {
+        if (priceType === 'small-large') return { label1: 'Small', label2: 'Large' };
+        if (priceType === 'half-full') return { label1: 'Half', label2: 'Full' };
+        return { label1: 'Single', label2: 'Double' };
+    };
 
     const downloadAsImage = async () => {
         try {
@@ -1258,7 +1268,7 @@ Ready for professional printing!`);
     <div style={{ padding: '20px', maxWidth: '1600px', margin: '0 auto', fontFamily: 'Arial, sans-serif', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <style>
             {`
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=Lora:wght@400;700&family=Crimson+Text:wght@400;700&family=EB+Garamond:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Cinzel:wght@400;500;600;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Alfa+Slab+One&family=Anton&family=Righteous&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=Lora:wght@400;700&family=Crimson+Text:wght@400;700&family=EB+Garamond:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Cinzel:wght@400;500;600;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Alfa+Slab+One&family=Anton&family=Righteous&family=Poppins:wght@400;500;700&family=Montserrat:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Nunito:wght@400;600;700&family=Roboto:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Manrope:wght@400;500;700&display=swap');
     `}
         </style>
 
@@ -1837,13 +1847,14 @@ Ready for professional printing!`);
                                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 'bold' }}>
                                         Price Type:
                                         <select value={selectedItemData.priceType || 'single'} onChange={(e) => {
-                                            const newType = e.target.value;
-                                            if (newType === 'double') {
-                                                updateItem(selectedItemData.id, 'priceType', 'double');
-                                                updateItem(selectedItemData.id, 'price1', selectedItemData.price || '0');
-                                                updateItem(selectedItemData.id, 'price2', '0');
-                                                updateItem(selectedItemData.id, 'label1', 'Single');
-                                                updateItem(selectedItemData.id, 'label2', 'Double');
+                                            const newType = e.target.value as MenuItem['priceType'];
+                                            if (newType !== 'single') {
+                                                const labels = getPriceLabels(newType);
+                                                updateItem(selectedItemData.id, 'priceType', newType);
+                                                updateItem(selectedItemData.id, 'price1', (selectedItemData as any).price1 || selectedItemData.price || '0');
+                                                updateItem(selectedItemData.id, 'price2', (selectedItemData as any).price2 || '0');
+                                                updateItem(selectedItemData.id, 'label1', labels.label1);
+                                                updateItem(selectedItemData.id, 'label2', labels.label2);
                                             } else {
                                                 updateItem(selectedItemData.id, 'priceType', 'single');
                                                 updateItem(selectedItemData.id, 'price', (selectedItemData as any).price1 || selectedItemData.price || '0');
@@ -1851,22 +1862,24 @@ Ready for professional printing!`);
                                         }} style={{ width: '100%', padding: '6px', marginTop: '4px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '14px', cursor: 'pointer' }}>
                                             <option value="single">Single Price</option>
                                             <option value="double">Double Price (2 columns)</option>
+                                            <option value="small-large">Small / Large</option>
+                                            <option value="half-full">Half / Full</option>
                                         </select>
                                     </label>
 
-                                    {selectedItemData.priceType === 'double' ? (
+                                    {isDualPriceType(selectedItemData.priceType) ? (
                                         <>
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
                                                 <div>
                                                     <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', marginBottom: '4px' }}>
                                                         Label 1:
-                                                        <input type="text" value={(selectedItemData as any).label1 || 'Single'} onChange={(e) => updateItem(selectedItemData.id, 'label1', e.target.value)} style={{ width: '100%', padding: '6px', marginTop: '2px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '13px' }} />
+                                                        <input type="text" value={(selectedItemData as any).label1 || getPriceLabels(selectedItemData.priceType).label1} onChange={(e) => updateItem(selectedItemData.id, 'label1', e.target.value)} style={{ width: '100%', padding: '6px', marginTop: '2px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '13px' }} />
                                                     </label>
                                                 </div>
                                                 <div>
                                                     <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', marginBottom: '4px' }}>
                                                         Label 2:
-                                                        <input type="text" value={(selectedItemData as any).label2 || 'Double'} onChange={(e) => updateItem(selectedItemData.id, 'label2', e.target.value)} style={{ width: '100%', padding: '6px', marginTop: '2px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '13px' }} />
+                                                        <input type="text" value={(selectedItemData as any).label2 || getPriceLabels(selectedItemData.priceType).label2} onChange={(e) => updateItem(selectedItemData.id, 'label2', e.target.value)} style={{ width: '100%', padding: '6px', marginTop: '2px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '13px' }} />
                                                     </label>
                                                 </div>
                                             </div>
@@ -2006,12 +2019,12 @@ Ready for professional printing!`);
                     })}
 
                     {menuItems.map(item => (
-                        <div key={item.id} onMouseDown={(e) => mode === 'admin' && !drawingLine && handleMouseDown(e, item)} onClick={(e) => { if (mode === 'admin' && !drawingLine) { if (e.ctrlKey || e.metaKey) { toggleItemSelection(item.id); } else { setSelectedItem(item.id); setSelectedItems([]); } } }} style={{ position: 'absolute', left: `${item.x}px`, top: `${item.y}px`, padding: '8px 12px', cursor: mode === 'admin' && !drawingLine ? 'move' : 'default', border: mode === 'admin' && (selectedItem === item.id || selectedItems.includes(item.id)) ? '2px solid #28a745' : mode === 'admin' ? '2px dashed transparent' : 'none', background: mode === 'admin' && (selectedItem === item.id || selectedItems.includes(item.id)) ? 'rgba(40, 167, 69, 0.1)' : mode === 'admin' ? 'rgba(0, 123,255, 0.05)' : 'transparent', borderRadius: '4px', transition: 'background 0.2s', userSelect: 'none', minWidth: item.priceType === 'double' ? '450px' : '300px', pointerEvents: mode === 'admin' && !drawingLine ? 'auto' : 'none' }} onMouseEnter={(e) => { if (mode === 'admin' && selectedItem !== item.id && !selectedItems.includes(item.id)) { e.currentTarget.style.borderColor = '#007bff'; } }} onMouseLeave={(e) => { if (mode === 'admin' && selectedItem !== item.id && !selectedItems.includes(item.id)) { e.currentTarget.style.borderColor = 'transparent'; } }}>
+                        <div key={item.id} onMouseDown={(e) => mode === 'admin' && !drawingLine && handleMouseDown(e, item)} onClick={(e) => { if (mode === 'admin' && !drawingLine) { if (e.ctrlKey || e.metaKey) { toggleItemSelection(item.id); } else { setSelectedItem(item.id); setSelectedItems([]); } } }} style={{ position: 'absolute', left: `${item.x}px`, top: `${item.y}px`, padding: '8px 12px', cursor: mode === 'admin' && !drawingLine ? 'move' : 'default', border: mode === 'admin' && (selectedItem === item.id || selectedItems.includes(item.id)) ? '2px solid #28a745' : mode === 'admin' ? '2px dashed transparent' : 'none', background: mode === 'admin' && (selectedItem === item.id || selectedItems.includes(item.id)) ? 'rgba(40, 167, 69, 0.1)' : mode === 'admin' ? 'rgba(0, 123,255, 0.05)' : 'transparent', borderRadius: '4px', transition: 'background 0.2s', userSelect: 'none', minWidth: isDualPriceType(item.priceType) ? '450px' : '300px', pointerEvents: mode === 'admin' && !drawingLine ? 'auto' : 'none' }} onMouseEnter={(e) => { if (mode === 'admin' && selectedItem !== item.id && !selectedItems.includes(item.id)) { e.currentTarget.style.borderColor = '#007bff'; } }} onMouseLeave={(e) => { if (mode === 'admin' && selectedItem !== item.id && !selectedItems.includes(item.id)) { e.currentTarget.style.borderColor = 'transparent'; } }}>
 {item.type === 'title' ? (
 <div style={{ fontSize: `${item.fontSize}px`, color: item.color, fontWeight: 'bold', fontFamily: item.fontFamily || 'Arial', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: mode === 'customer' && (item as any).showUnderline !== false ? '2px solid currentColor' : 'none', paddingBottom: mode === 'customer' && (item as any).showUnderline !== false ? '4px' : '0', textAlign: item.align || 'left' }}>
 {item.name}
 </div>
-) : item.priceType === 'double' ? (
+) : isDualPriceType(item.priceType) ? (
 <div>
 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '15px', alignItems: 'center' }}>
 <span style={{ fontSize: `${item.fontSize}px`, color: item.color, fontWeight: '500', fontFamily: item.fontFamily || 'Arial', textAlign: 'left' }}>
@@ -2019,7 +2032,7 @@ Ready for professional printing!`);
 </span>
 <div style={{ textAlign: 'center', minWidth: '90px' }}>
 <div style={{ fontSize: `${Math.max(10, item.fontSize - 4)}px`, color: item.color, fontWeight: 'bold', marginBottom: '4px', opacity: 0.7 }}>
-{(item as any).label1 || 'Single'}
+{(item as any).label1 || getPriceLabels(item.priceType).label1}
 </div>
 <div style={{ fontSize: `${item.fontSize}px`, color: item.color, fontWeight: 'bold', fontFamily: item.fontFamily || 'Arial' }}>
 ₹{String((item as any).price1 || '0')}
@@ -2027,7 +2040,7 @@ Ready for professional printing!`);
 </div>
 <div style={{ textAlign: 'center', minWidth: '90px' }}>
 <div style={{ fontSize: `${Math.max(10, item.fontSize - 4)}px`, color: item.color, fontWeight: 'bold', marginBottom: '4px', opacity: 0.7 }}>
-{(item as any).label2 || 'Double'}
+{(item as any).label2 || getPriceLabels(item.priceType).label2}
 </div>
 <div style={{ fontSize: `${item.fontSize}px`, color: item.color, fontWeight: 'bold', fontFamily: item.fontFamily || 'Arial' }}>
 ₹{String((item as any).price2 || '0')}

@@ -19,6 +19,13 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ slu
     }
 
     const menuData: MenuData = menu as any
+    const isDualPriceType = (priceType?: MenuData['individualItems'][number]['priceType']) =>
+        priceType === 'double' || priceType === 'small-large' || priceType === 'half-full'
+    const getPriceLabels = (priceType?: MenuData['individualItems'][number]['priceType']) => {
+        if (priceType === 'small-large') return { label1: 'Small', label2: 'Large' }
+        if (priceType === 'half-full') return { label1: 'Half', label2: 'Full' }
+        return { label1: 'Single', label2: 'Double' }
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -242,7 +249,7 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ slu
                                     left: `${item.x}px`,
                                     top: `${item.y}px`,
                                     padding: '8px 12px',
-                                    minWidth: item.priceType === 'double' ? '450px' : '300px',
+                                    minWidth: isDualPriceType(item.priceType) ? '450px' : '300px',
                                 }}
                             >
                                 {item.type === 'title' ? (
@@ -260,7 +267,7 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ slu
                                     >
                                         {item.name}
                                     </div>
-                                ) : item.priceType === 'double' ? (
+                                ) : isDualPriceType(item.priceType) ? (
                                     <div
                                         style={{
                                             display: 'grid',
@@ -289,7 +296,7 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ slu
                                                     opacity: 0.7,
                                                 }}
                                             >
-                                                {item.label1 || 'Single'}
+                                                {item.label1 || getPriceLabels(item.priceType).label1}
                                             </div>
                                             <div
                                                 style={{
@@ -312,7 +319,7 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ slu
                                                     opacity: 0.7,
                                                 }}
                                             >
-                                                {item.label2 || 'Double'}
+                                                {item.label2 || getPriceLabels(item.priceType).label2}
                                             </div>
                                             <div
                                                 style={{
