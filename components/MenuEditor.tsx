@@ -530,6 +530,29 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menuId, initialMenu, onSave }) 
         ));
     };
 
+    const applySectionHeaderPreset = (id: number, preset: 'single-double' | 'small-large' | 'half-full') => {
+        const presetMap = {
+            'single-double': { header1Text: 'Single', header2Text: 'Double' },
+            'small-large': { header1Text: 'Small', header2Text: 'Large' },
+            'half-full': { header1Text: 'Half', header2Text: 'Full' },
+        };
+
+        saveToHistory();
+        setSections(sections.map(s =>
+            s.id === id ? { ...s, ...presetMap[preset] } : s
+        ));
+    };
+
+    const getSectionHeaderPreset = (section: Section): 'single-double' | 'small-large' | 'half-full' | 'custom' => {
+        const header1 = (section.header1Text || '').trim().toLowerCase();
+        const header2 = (section.header2Text || '').trim().toLowerCase();
+
+        if (header1 === 'single' && header2 === 'double') return 'single-double';
+        if (header1 === 'small' && header2 === 'large') return 'small-large';
+        if (header1 === 'half' && header2 === 'full') return 'half-full';
+        return 'custom';
+    };
+
     const deleteSection = (id: number) => {
         saveToHistory();
         setSections(sections.filter(s => s.id !== id));
@@ -1555,6 +1578,25 @@ Ready for professional printing!`);
 
                                     {selectedSectionData.showColumnHeaders !== false && (
                                         <>
+                                            <label style={{ display: 'block', marginBottom: '10px', fontSize: '12px', fontWeight: 'bold' }}>
+                                                Column Header Preset:
+                                                <select
+                                                    value={getSectionHeaderPreset(selectedSectionData)}
+                                                    onChange={(e) => {
+                                                        const preset = e.target.value as 'single-double' | 'small-large' | 'half-full' | 'custom';
+                                                        if (preset !== 'custom') {
+                                                            applySectionHeaderPreset(selectedSectionData.id, preset);
+                                                        }
+                                                    }}
+                                                    style={{ width: '100%', padding: '6px', marginTop: '4px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '13px', cursor: 'pointer' }}
+                                                >
+                                                    <option value="single-double">Single / Double</option>
+                                                    <option value="small-large">Small / Large</option>
+                                                    <option value="half-full">Half / Full</option>
+                                                    <option value="custom">Custom (Manual)</option>
+                                                </select>
+                                            </label>
+
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
                                                 <div>
                                                     <label style={{ display: 'block', fontSize: '11px', fontWeight: 'bold', marginBottom: '4px' }}>
